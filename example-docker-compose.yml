@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  rssbridge:
+    volumes:
+      - ./whitelist.txt:/app/whitelist.txt
+      - ./DEBUG:/app/DEBUG
+      - ../bridges/BakaUpdatesMangaReleasesBridge.php:/app/bridges/BakaUpdatesMangaReleasesBridge.php
+      - ../bridges/PillowfortBridge.php:/app/bridges/PillowfortBridge.php
+      - ./holdem.html:/app/holdem.html
+    ports:
+      - 3000:80
+    image: rssbridge/rss-bridge:2022-01-20
+    restart: unless-stopped
+    
