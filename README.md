@@ -10,7 +10,7 @@ Steps to use:
 3. Add the .html file to your docker build like in [example-docker-compose.yml](https://github.com/KamaleiZestri/custom-bridges/blob/master/example-docker-compose.yml)
 4. Use the file name in the bridge.
 
-[Mastodon Homefeed](https://github.com/KamaleiZestri/custom-bridges/blob/master/bridges/MastodonHomefeedBridge.php) - Turns the home feed of your mastodon account into an RSS feed.
+[Mastodon Homefeed](https://github.com/KamaleiZestri/custom-bridges/blob/master/bridges/MastodonHomefeedBridge.php) - Turns the home feed of your mastodon account into an RSS feed. Inspired by [this](https://github.com/matthewn/mastodon-homefeed-rss).
 
 Steps to use:
 1. Create an application. This may differ per instance, but it is likely under "Development". 
