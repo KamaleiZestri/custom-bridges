@@ -1,192 +1,205 @@
 <?php
-class BakaUpdatesMangaReleasesBridge extends BridgeAbstract {
-	const NAME = 'Baka Updates Manga Releases';
-	const URI = 'https://www.mangaupdates.com/';
-	const DESCRIPTION = 'Get the latest series releases';
-	const MAINTAINER = 'fulmeek, KamaleiZestri';
-	const PARAMETERS = array(
-		'By series' => array(
-			'series_id' => array(
-				'name'		=> 'Series ID',
-				'type'		=> 'number',
-				'required'	=> true,
-				'exampleValue'	=> '12345'
-			)
-		),
-		'By list' => array(
-			'list_id' => array(
-				// 'name' 		=> 'List ID and Type',
-				// 'type' 		=> 'text',
-				// 'required' 	=> true,
-				// 'exampleValue'	=> '123456&list=read'
-				'name'		=> 'List File Name',
-				'type'		=> 'text',
-				'required'	=> true,
-				'exampleValue'=> 'holdem.html'
-			)
-		)
-	);
-	const LIMIT_COLS = 5;
-	const LIMIT_ITEMS = 10;
-	const RELEASES_URL = 'https://www.mangaupdates.com/releases.html';
 
-	private $feedName = '';
+class MastodonHomefeedBridge extends BridgeAbstract
+{
+    const NAME = 'Mastodon Homefeed';
+    const URI = 'https://joinmastodon.org';
+    const DESCRIPTION = 'Turns your mastodon homefeed into RSS';
+    const MAINTAINER = 'KamaleiZestri';
+    const PARAMETERS = [[
+        'instance' => [
+            'name' => 'Instance',
+            'type' => 'text',
+            'required' => true,
+            'exampleValue' => 'mastodon.social'
+        ],
+        'accesstoken' => [
+            'name' => 'Access Token',
+            'required' => true
+        ],
+        'noava' => [
+            'name' => 'Hide avatar',
+            'type' => 'checkbox',
+            'title' => 'Check to hide user avatars.'
+        ],
+        'norep' => [
+            'name' => 'Without replies',
+            'type' => 'checkbox',
+            'title' => 'Hide replies, as determined by relations (not mentions).'
+			],
+        'noboost' => [
+            'name' => 'Without boosts/reblogs',
+            'type' => 'checkbox',
+            'title' => 'Hide boosts. This will reduce loading time as RSS-Bridge fetches the boosted status from other federated instances.'
+        ],
+        'image' => [
+            'name' => 'Select image type',
+            'type' => 'list',
+            'title' => 'Decides how the image is displayed, if at all.',
+            'values' => [
+                'None' => 'None',
+                'Small' => 'Small',
+                'Full' => 'Full'
+            ],
+            'defaultValue' => 'Full'
+        ]
+    ]];
 
-	public function collectData() {
-		if($this -> queriedContext == 'By series')
-			$this -> collectDataBySeries();
-		else	//queriedContext == 'By list'
-			$this -> collectDataByList();
-	}
+    public function getURI()
+    {
+        return 'https://' . $this->getInput('instance') . '/home';
+    }
 
-	public function getURI(){
-		if($this -> queriedContext == 'By series') {
-			$series_id = $this->getInput('series_id');
-			if (!empty($series_id)) {
-				return self::URI . 'releases.html?search=' . $series_id . '&stype=series';
-			}
-		} else	//queriedContext == 'By list'
-			return self::RELEASES_URL;
+    /**
+     * Mastodon Bridge alt.
+     *
+     * Inherits alot from Pillowfort bridge.
+     */
+    public function collectData()
+    {
+        $header = ['Authorization: Bearer ' . $this->getInput('accesstoken')];
+		$url = 'https://' . $this->getInput('instance') . '/api/v1/timelines/home';
+		$content = json_decode(getContents($url, $header), true);
 
-		return self::URI;
-	}
+        $posts = $content;
 
-	public function getName(){
-		if(!empty($this->feedName)) {
-			return $this->feedName . ' - ' . self::NAME;
-		}
-		return parent::getName();
-	}
+        foreach ($posts as $post) {
+            $item = $this->getItemFromPost($post);
 
-	private function getSanitizedHash($string) {
-		return hash('sha1', preg_replace('/[^a-zA-Z0-9\-\.]/', '', ucwords(strtolower($string))));
-	}
+            // empty when noreblogs or noreplies comes into effect
+            if (!empty($item)) {
+                $this->items[] = $item;
+            }
+        }
+    }
 
-	private function filterText($text) {
-		return rtrim($text, '* ');
-	}
+    protected function getItemFromPost($post)
+    {
+        //check for reply
+        if ($this -> getInput('norep') && !$post['in_reply_to_id"'] != null)
+            return [];
 
-	private function filterHTML($text) {
-		return $this->filterText(html_entity_decode($text));
-	}
+        //check for reblog
+        if ($post['reblog'] == null) {
+            $embPost = false;
+        } else {
+            $embPost = true;
+        }
+        
+        if ($this -> getInput('noboost') && $embPost) {
+            return [];
+        }
 
-	private function findID($manga) {
-		// sometimes new series are on the release list that have no ID. just drop them.
-		if(@$this -> filterHTML($manga -> find('a', 0) -> href) != null) {
-			preg_match('/series\/([0-9a-zA-Z]*)\//', $this -> filterHTML($manga -> find('a', 0) -> href), $match);
-			return $match[1];
-		} else
-			return 0;
-	}
+        $item = [];
 
-	private function collectDataBySeries() {
-		$html = getSimpleHTMLDOM($this->getURI());
+        //incase of reblog, just get data from internal, original post
+        if ($embPost) {
+            $post = $post['reblog'];
+        }
 
-		// content is an unstructured pile of divs, ugly to parse
-		$cols = $html->find('div#main_content div.row > div.text');
-		if (!$cols)
-			returnServerError('No releases');
 
-		$rows = array_slice(
-			array_chunk($cols, self::LIMIT_COLS), 0, self::LIMIT_ITEMS
-		);
+        $item['uid'] = $post['id'];
+        $item['timestamp'] = strtotime($post['created_at']);
+        $item['uri'] = $post['uri'];
+        $item['author'] = $post['account']['username'];
+        if ($post['content'] == null) {
+            $item['title'] = '[NO TITLE]';
+        }
+        else {
+            $item['title'] = $post['content'];
+        }
 
-		if (isset($rows[0][1])) {
-			$this->feedName = $this->filterHTML($rows[0][1]->plaintext);
-		}
+        $avatarText = $this -> genAvatarText(
+            $item['author'],
+            $post['account']['avatar'],
+            $post['account']['url']
+        );
 
-		foreach($rows as $cols) {
-			if (count($cols) < self::LIMIT_COLS) continue;
+        $imagesText = $this -> genImagesText($post['media_attachments']);
 
-			$item = array();
-			$title = array();
+        $item['content'] = <<<EOD
+            <div style="display: inline-block; vertical-align: top;">
+                {$avatarText}
+            </div>
+            <div style="display: inline-block; vertical-align: top;">
+                {$post['content']}
+            </div>
+            <div style="display: block; vertical-align: top;">
+                {$imagesText}
+            </div>
+            EOD;
 
-			$item['content'] = '';
+        return $item;
+    }
 
-			$objDate = $cols[0];
-			if ($objDate)
-				$item['timestamp'] = strtotime($objDate->plaintext);
+    protected function genAvatarText($author, $avatar_url, $title)
+    {
+        $noava = $this -> getInput('noava');
 
-			$objTitle = $cols[1];
-			if ($objTitle) {
-				$title[] = $this->filterHTML($objTitle->plaintext);
-				$item['content'] .= '<p>Series: ' . $this->filterText($objTitle->innertext) . '</p>';
-			}
+        if ($noava) {
+            return '';
+        } else {
+            return <<<EOD
+                <a href="https://{$this->getInput('instance')}/@{$author}">
+                <img
+                    style="align:top; width:75px; border:1px solid black;"
+                    alt="{$author}"
+                    src="{$avatar_url}"
+                    title="{$title}" />
+                </a>
+                EOD;
+        }
+    }
 
-			$objVolume = $cols[2];
-			if ($objVolume && !empty($objVolume->plaintext))
-				$title[] = 'Vol.' . $objVolume->plaintext;
+    protected function genImagesText($media)
+    {
+        $dimensions = $this -> getInput('image');
+        $text = '';
 
-			$objChapter = $cols[3];
-			if ($objChapter && !empty($objChapter->plaintext))
-				$title[] = 'Chp.' . $objChapter->plaintext;
+        //preg_replace used for images with spaces in the url
 
-			$objAuthor = $cols[4];
-			if ($objAuthor && !empty($objAuthor->plaintext)) {
-				$item['author'] = $this->filterHTML($objAuthor->plaintext);
-				$item['content'] .= '<p>Groups: ' . $this->filterText($objAuthor->innertext) . '</p>';
-			}
+        if ($dimensions == 'None') {
+            foreach ($media as $image) {
+                $imageURL = preg_replace('[ ]', '%20', $image['url']);
+                $text .= <<<EOD
+                    <a href="{$imageURL}">
+                    {$imageURL}
+                    </a>
+                    EOD;
+            }
+        }
+        else {
+            foreach ($media as $image) {
+                if ($dimensions == 'Small') {
+                    $imageURL = preg_replace('[ ]', '%20', $image['preview_url']);
+                }
+                else {
+                    $imageURL = preg_replace('[ ]', '%20', $image['url']);
+                }
 
-			$item['title'] = implode(' ', $title);
-			$item['uri'] = $this->getURI();
-			$item['uid'] = $this->getSanitizedHash($item['title'] . $item['author']);
+                if (strcmp($image['type'], 'gifv') == 0) {
+                    $text .= <<<EOD
+                        <a href="{$imageURL}">
+                            <video autoplay muted loop
+                                style="align:top; max-width:558px; border:1px solid black;"
+                                src="{$imageURL}" 
+                            />
+                        </a>
+                        EOD;
+                }
+                else {
+                    $text .= <<<EOD
+                        <a href="{$imageURL}">
+                            <img
+                                style="align:top; max-width:558px; border:1px solid black;"
+                                src="{$imageURL}" 
+                            />
+                        </a>
+                        EOD;
+                }
+            }
+        }
 
-			$this->items[] = $item;
-		}
-	}
-
-	private function collectDataByList() {
-		$this -> feedName = 'Releases';
-		$list = array();
-
-		$releasesHTML = getSimpleHTMLDOM(self::RELEASES_URL);
-
-		$list_id = $this -> getInput('list_id');
-		// $listHTML = getSimpleHTMLDOM('https://www.mangaupdates.com/mylist.html?id=' . $list_id);
-		$listHTML = file_get_contents($this->getInput('list_id'));
-		$listHTML = new simple_html_dom($listHTML);
-
-		//get ids of the manga that the user follows,
-		$parts = $listHTML -> find('table#ptable tr > td.pl');
-		foreach($parts as $part) {
-			$list[] = $this -> findID($part);
-		}
-
-		//similar to above, but the divs are in groups of 3.
-		$cols = $releasesHTML -> find('div#main_content div.row > div.pbreak');
-		$rows = array_slice(array_chunk($cols, 3), 0);
-
-		foreach($rows as $cols) {
-			//check if current manga is in user's list.
-			$id = $this -> findId($cols[0]);
-			if(!array_search($id, $list)) continue;
-
-			$item = array();
-			$title = array();
-
-			$item['content'] = '';
-
-			$objTitle = $cols[0];
-			if ($objTitle) {
-				$title[] = $this->filterHTML($objTitle->plaintext);
-				$item['content'] .= '<p>Series: ' . $this->filterHTML($objTitle -> innertext) . '</p>';
-			}
-
-			$objVolChap = $cols[1];
-			if ($objVolChap && !empty($objVolChap->plaintext))
-				$title[] = $this -> filterHTML($objVolChap -> innertext);
-
-			$objAuthor = $cols[2];
-			if ($objAuthor && !empty($objAuthor->plaintext)) {
-				$item['author'] = $this->filterHTML($objAuthor -> plaintext);
-				$item['content'] .= '<p>Groups: ' . $this->filterHTML($objAuthor -> innertext) . '</p>';
-			}
-
-			$item['title'] = implode(' ', $title);
-			$item['uri'] = self::URI .'series/' . $id;
-			$item['uid'] = $this->getSanitizedHash($item['title'] . $item['author']);
-
-			$this->items[] = $item;
-		}
-	}
+        return $text;
+    }
 }
