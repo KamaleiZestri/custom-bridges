@@ -62,6 +62,9 @@ for manga in releasesList:
     objTitle = manga[0]
     if objTitle:
         title = objTitle.getText()
+        # If it ends in a star, remove the ending star.
+        if title[-1] == "*":
+            title = title[:-1]
         item["content_html"] += "<p>Series: {0} </p>".format(str(objTitle))
     
     objVolChap = manga[1]
@@ -75,7 +78,7 @@ for manga in releasesList:
 
     item["title"] = title
     item["url"] = "https://www.mangaupdates.com/series/{0}".format(id)
-    item["id"] = hash(title + objAuthor.getText())
+    item["id"] = hash(id + objVolChap.getText() + objAuthor.getText())
 
     feed["items"].append(item)
 
