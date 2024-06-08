@@ -7,7 +7,6 @@
 
 import argparse
 import json
-import sys
 
 import requests
 
@@ -68,7 +67,7 @@ def genImagesText(media):
 def getItemFromPost(post:dict):
     # check for reply
     if args.NOREP and post["in_reply_to_id"] is not None:
-        return []
+        return {}
 
     # check for reblog
     if post["reblog"] is None:
@@ -77,7 +76,7 @@ def getItemFromPost(post:dict):
         embPost = True
 
     if args.NOBOOST and embPost:
-        return []
+        return {}
 
     item:dict = {}
 
@@ -88,7 +87,7 @@ def getItemFromPost(post:dict):
     item["id"] = post["id"]
     item["date_published"] = post["created_at"]
     item["url"] = post["uri"]
-    item["authors"] = [post["account"]["username"]]
+    item["authors"] = [{"name":post["account"]["username"]}]
     if post["content"] is None:
         item["title"] = "[NO TITLE]"
     else:
