@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # This script expects one input which is your Baka Updates list such as:
 #   BakaRSS.py "ReadingList.html"
 # Follow these steps to get the HTML file:
@@ -73,7 +75,7 @@ for manga in releasesList:
 
     objAuthor = manga[2]
     if objAuthor:
-        item["authors"] = [objAuthor.getText()]
+        item["authors"] = [{"name":objAuthor.getText()}]
         item["content_html"] += "<p>Groups: {0} </p>".format(str(objAuthor))
 
     item["title"] = title
