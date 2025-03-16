@@ -2,7 +2,7 @@
 
 # This script expects one input which is your Baka Updates list such as:
 #   BakaRSS.py "ReadingList.json"
-# Follow these steps to get the JSON file:
+# Follow these steps to get the JSON file or use the BakaRSS Lister Userscript:
 # 1. Go to any Baka Updates List page. ex; Reading List
 # 2. Right click -> "Developer Tools" -> "View Page Source"
 # 3. On the new page, copy and paste all the contents into a new file of your own called `input.html`.
@@ -13,7 +13,6 @@
 import argparse
 import json
 import re
-import sys
 import urllib.request
 
 from bs4 import BeautifulSoup

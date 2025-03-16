@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # This script takes one input which is the username of a Newgrounds user such as:
 #   NewgroundsRSS.py "TomFulp"
 #
@@ -26,7 +28,11 @@ artData = artSoup.select(".item-portalitem-art-medium")
 for post in artData:
     item = {}
 
-    item["authors"] = [username]
+    item["authors"] = [{"name":username, "url":feed["home_page_url"]}]
+    # artist = {}
+    # artist["name"] = username
+    # item["authors"].append(artist)
+    #TODO could add "url" and "avatar" but needs a little more work for it
     item["url"] = post.get("href")
 
     titleOrRestricted = post.select_one("h4").get_text()
