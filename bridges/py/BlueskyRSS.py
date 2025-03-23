@@ -141,8 +141,11 @@ def getItemFromPost(object:dict):
         embeds += getEmbedData(post["record"])
         
        
-        
-    avatarText = genAvatarText(post["author"]["displayName"], post["author"]["avatar"], item["title"])
+    if "avatar" in post["author"]:
+        avatarText = genAvatarText(post["author"]["displayName"], post["author"]["avatar"], item["title"])
+    else:
+        avatarText = "<p>(NO AVATAR)</p>"
+
     embedsText = ""
     for embed in embeds:
         embedsText += embed
@@ -270,13 +273,6 @@ for post in bskyJSON:
         feed["items"].append(item)
 
 print(json.dumps(feed))
-
-with open("temp.json", "w") as file:
-    file.write(json.dumps(feed["items"]))
-
-with open("timelinetemp.json", "w") as file:
-    file.write(json.dumps(bskyJSON))
-
 
 
 # TODO refactor reblogs
