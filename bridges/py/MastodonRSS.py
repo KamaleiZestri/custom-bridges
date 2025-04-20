@@ -124,6 +124,7 @@ feed:dict = {"items":[]}
 feed["title"] = f"Mastodon - {args.instance} Instance"
 feed["home_page_url"] = f"https://www.{args.instance}/"
 feed["description"] = f"Read your mastodon feed from {args.instance}"
+feed["version"] = "https://jsonfeed.org/version/1.1"
 
 
 url = f"https://{args.instance}/api/v1/timelines/home";

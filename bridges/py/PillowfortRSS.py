@@ -133,6 +133,7 @@ feed:dict = {"items":[]}
 feed["title"] = f"{args.username} - Pillowfort"
 feed["home_page_url"] = f"https://www.pillowfort.social/{args.username}/json/?p=1"
 feed["description"] = f"Get the latest posts from {args.username} on Pillowfort."
+feed["version"] = "https://jsonfeed.org/version/1.1"
 
 pillowfortJSON = requests.get(feed["home_page_url"]).json()
 

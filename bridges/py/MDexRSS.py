@@ -109,7 +109,7 @@ feed:dict = {"items":[]}
 feed["title"] = "Mangadex Follows Feed"
 feed["home_page_url"] = "https://mangadex.org/titles/feed"
 feed["description"] = "Read your Mangadex Follows feed."
-
+feed["version"] = "https://jsonfeed.org/version/1.1"
 
 if args.username and args.password:
     token = getRefreshToken(args.username, args.password, args.clientid, args.clientsecret)

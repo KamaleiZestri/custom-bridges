@@ -19,6 +19,7 @@ feed:dict = {"items":[]}
 feed["title"] = f"{username} - Newgrounds"
 feed["home_page_url"] = f"https://{username}.newgrounds.com/"
 feed["description"] = f"Get the latest art from {username} on Newgrounds."
+feed["version"] = "https://jsonfeed.org/version/1.1"
 
 artHTML:str = urllib.request.urlopen(f"https://{username}.newgrounds.com/art")
 artSoup = BeautifulSoup(artHTML, "html.parser")

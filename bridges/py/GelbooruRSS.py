@@ -22,12 +22,13 @@ feed:dict = {"items":[]}
 feed["title"] = f"Gelbooru - {args.search}"
 feed["home_page_url"] = f"https://gelbooru.com/index.php?page=post&s=list&tags={urlencode.quote(args.search)}"
 feed["description"] = f"Read Gelbooru search for the following tags: {args.search} "
+feed["version"] = "https://jsonfeed.org/version/1.1"
 
 searchURL = (f"https://gelbooru.com/index.php?&page=dapi&s=post&q=index&json=1&"
                 f"pid={args.page}&limit={args.limit}&tags={urlencode.quote(args.search)}")
 booruJSON = requests.get(searchURL).json()
 
-#Gelooru does not put their content in the root.
+#Gelbooru does not put their content in the root.
 if (type(booruJSON) is dict):
     booruJSON = booruJSON["post"]
 
@@ -40,7 +41,7 @@ for post in booruJSON:
     item["title"] = f"Gelbooru | {item["id"]}"
 
     item["content_html"] = f"""
-        <a href="{item["url"]}"><img src="{post["preview_url"]}"></a>
+        <a href="{item["url"]}"><img style="align:top; max-width:558px; border:1px solid black;" src="{post["sample_url"]}"/></a>
         <br><br>
         <b>Dimensions:</b> {post["width"]} x {post["height"]}
         <br><br>

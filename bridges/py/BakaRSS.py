@@ -62,6 +62,7 @@ feed:dict = {"items":[]}
 feed["title"] = "Baka Updates Manga Releases"
 feed["home_page_url"] = "https://www.mangaupdates.com/"
 feed["description"] = "Get the latest series releases from your follows list"
+feed["version"] = "https://jsonfeed.org/version/1.1"
 
 
 #get all manga on releases page; usually about 3 days back

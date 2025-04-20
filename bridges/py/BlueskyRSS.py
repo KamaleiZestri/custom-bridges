@@ -238,6 +238,7 @@ if args.TIMELINEPASS !="":
     feed["title"] = f"{displayName}'s Timeline - Bluesky"
     feed["home_page_url"] = f"https://bsky.app/profile/{args.username}"
     feed["description"] = f"Posts from the timeline {displayName} on Bluesky"
+    feed["version"] = "https://jsonfeed.org/version/1.1"
 
     headers = {"Authorization" : f"Bearer {accessKey}"}
 
@@ -251,6 +252,7 @@ else:
     feed["title"] = f"{displayName} - Bluesky"
     feed["home_page_url"] = f"https://bsky.app/profile/{args.username}"
     feed["description"] = "Posts on Bluesky from " + displayName
+    feed["version"] =  "https://jsonfeed.org/version/1.1"
     paramData = {"actor" : args.username,
                 "filter" : filterType}
 
