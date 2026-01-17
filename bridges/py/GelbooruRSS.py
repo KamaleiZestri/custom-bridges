@@ -15,6 +15,8 @@ parser = argparse.ArgumentParser(description ="This script outputs an RSS feed o
 parser.add_argument("search", help="Tags to search for")
 parser.add_argument("--page", dest="page", default="0", help="'What page of the search to stare pulling from.'")
 parser.add_argument("--limit", dest="limit", default="100", help="'How many posts to pull. Max of 1000'")
+parser.add_argument("--apikey",dest="apikey", help="API key provided by gelbooru")
+parser.add_argument("--userid",dest="userid", help="User ID provided by gelbooru")
 args = parser.parse_args()
 
 feed:dict = {"items":[]}
@@ -24,7 +26,7 @@ feed["home_page_url"] = f"https://gelbooru.com/index.php?page=post&s=list&tags={
 feed["description"] = f"Read Gelbooru search for the following tags: {args.search} "
 feed["version"] = "https://jsonfeed.org/version/1.1"
 
-searchURL = (f"https://gelbooru.com/index.php?&page=dapi&s=post&q=index&json=1&"
+searchURL = (f"https://gelbooru.com/index.php?&page=dapi&s=post&q=index&json=1&api_key={args.apikey}&user_id={args.userid}&"
                 f"pid={args.page}&limit={args.limit}&tags={urlencode.quote(args.search)}")
 booruJSON = requests.get(searchURL).json()
 
@@ -41,7 +43,9 @@ for post in booruJSON:
     item["title"] = f"Gelbooru | {item["id"]}"
 
     item["content_html"] = f"""
-        <a href="{item["url"]}"><img style="align:top; max-width:558px; border:1px solid black;" src="{post["sample_url"]}"/></a>
+        <div style="display: inline-block; vertical-align: top;">
+        <a href="{item["url"]}"><img style="align:top; max-width:558px; border:1px solid black;" src="{post["sample_url"]}" style="align:top; max-width:558px; border:1px solid black;"/></a>
+        </div>
         <br><br>
         <b>Dimensions:</b> {post["width"]} x {post["height"]}
         <br><br>
