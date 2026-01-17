@@ -127,6 +127,18 @@ def getItemFromPost(object:dict):
     item["date_published"] = post["record"]["createdAt"]
     item["url"] = f"https://bsky.app/profile/{post["author"]["handle"]}/post/{post["uri"].split("/")[-1]}"
 
+    repostText = ""
+    if "reason" in object.keys():
+        if object["reason"]["$type"] == "app.bsky.feed.defs#reasonRepost":
+            displayName = object["reason"]["by"]["displayName"]
+            handle = object["reason"]["by"]["handle"]
+            repostText = f"""
+            <div style="display: inline-block; vertical-align: top;">
+            Reposted by {displayName} ({handle})
+            </div>
+            <br>
+            """
+        
     if post["record"]["text"]:
         item["title"] = post["record"]["text"]
     else:
@@ -151,6 +163,7 @@ def getItemFromPost(object:dict):
         embedsText += embed
 
     item["content_html"] = f"""
+    {repostText}
     <div style="display: inline-block; vertical-align: top;">
 	    {avatarText}
     </div>
@@ -275,8 +288,3 @@ for post in bskyJSON:
         feed["items"].append(item)
 
 print(json.dumps(feed))
-
-
-# TODO refactor reblogs
-# 1. should show timestamp/author of reblogger (optional)
-# in such a case, embed the reblog. same idea with replies
