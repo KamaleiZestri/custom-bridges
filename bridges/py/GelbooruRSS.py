@@ -44,7 +44,7 @@ for post in booruJSON:
 
     item["content_html"] = f"""
         <div style="display: inline-block; vertical-align: top;">
-        <a href="{item["url"]}"><img style="align:top; max-width:558px; border:1px solid black;" src="{post["sample_url"]}" style="align:top; max-width:558px; border:1px solid black;"/></a>
+        <a href="{item["url"]}"><img style="align:top; max-width:558px; border:1px solid black;" src="{post["preview_url"]}" style="align:top; max-width:558px; border:1px solid black;"/></a>
         </div>
         <br><br>
         <b>Dimensions:</b> {post["width"]} x {post["height"]}
