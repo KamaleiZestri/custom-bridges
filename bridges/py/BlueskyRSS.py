@@ -7,7 +7,6 @@
 
 import argparse
 import json
-
 import requests
 
 
@@ -146,7 +145,7 @@ def getItemFromPost(object:dict):
     if post["record"]["text"]:
         item["title"] = post["record"]["text"]
     else:
-        item["title"] = f"Post by {item["authors"][0]}"
+        item["title"] = f"Post by {item["authors"][0]["name"]}"
 
   
     embeds = []
@@ -158,7 +157,7 @@ def getItemFromPost(object:dict):
         
        
     if "avatar" in post["author"]:
-        avatarText = genAvatarText(item["authors"][0], post["author"]["avatar"], item["title"])
+        avatarText = genAvatarText(post["author"]["handle"], post["author"]["avatar"], item["title"])
     else:
         avatarText = "<p>(NO AVATAR)</p>"
 
