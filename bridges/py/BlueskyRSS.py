@@ -122,7 +122,11 @@ def getItemFromPost(object:dict):
 
     item:dict = {}
 
-    item["authors"] = [{"name":post["author"]["displayName"]}]
+    # some authors dont have display names
+    if ("displayName" in post["author"]):
+        item["authors"] = [{"name":post["author"]["displayName"]}]
+    else:
+        item["authors"] = [{"name":post["author"]["handle"]}]
     item["id"] = post["cid"]
     item["date_published"] = post["record"]["createdAt"]
     item["url"] = f"https://bsky.app/profile/{post["author"]["handle"]}/post/{post["uri"].split("/")[-1]}"
@@ -142,7 +146,7 @@ def getItemFromPost(object:dict):
     if post["record"]["text"]:
         item["title"] = post["record"]["text"]
     else:
-        item["title"] = f"Post by {post["author"]["displayName"]}"
+        item["title"] = f"Post by {item["authors"][0]}"
 
   
     embeds = []
@@ -154,7 +158,7 @@ def getItemFromPost(object:dict):
         
        
     if "avatar" in post["author"]:
-        avatarText = genAvatarText(post["author"]["displayName"], post["author"]["avatar"], item["title"])
+        avatarText = genAvatarText(item["authors"][0], post["author"]["avatar"], item["title"])
     else:
         avatarText = "<p>(NO AVATAR)</p>"
 
