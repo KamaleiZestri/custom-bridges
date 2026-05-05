@@ -7,6 +7,7 @@
 
 import argparse
 import json
+from bs4 import BeautifulSoup
 
 import requests
 
@@ -91,7 +92,7 @@ def getItemFromPost(post:dict):
     if post["content"] is None:
         item["title"] = "[NO TITLE]"
     else:
-        item["title"] = post["content"]
+        item["title"] = BeautifulSoup(post["content"]).get_text()
 
     avatarText = genAvatarText(post["account"]["username"], post["account"]["avatar"], post["account"]["url"])
     imagesText = genImagesText(post["media_attachments"])
