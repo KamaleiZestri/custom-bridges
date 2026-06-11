@@ -41,7 +41,11 @@ def genImagesText(media):
             if isinstance(media, str):
                 imageURL = media.replace(" ", "%20")
             else:
-                imageURL = media["thumb"].replace(" ", "%20")
+                #embed.gallery use "thumbnail" instead of "thumb" used by embed.imagees
+                if "thumbnail" in media:
+                    imageURL = media["thumbnail"].replace(" ", "%20")
+                else:
+                    imageURL = media["thumb"].replace(" ", "%20")
             text+= f"""
             <a href="{imageURL}">
                 <img
@@ -113,6 +117,10 @@ def getEmbedData(embed):
         case "app.bsky.embed.images#view":
             for image in embed["images"]:
                 text += genImagesText(image)
+        
+        case "app.bsky.embed.gallery#view":
+            for item in embed["items"]:
+                text += genImagesText(item)
 
     return text
 
