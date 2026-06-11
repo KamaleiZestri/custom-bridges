@@ -181,7 +181,7 @@ def getItemFromPost(object:dict):
     return item
 
 
-def getFeedDataJson(url, params, headers):
+def getFeedDataJson(url, params, headers) -> list:
     """Run HTTP request. Repeats to get as many posts as requested."""
 
     #TODO why doesnt author feed give back a cursor?
@@ -191,7 +191,7 @@ def getFeedDataJson(url, params, headers):
         else:
              params["limit"] = "100"
         resp = requests.get(url=url, params=params, headers=headers).json()
-        return resp
+        return resp["feed"]
 
     fullResponse = []
     curr:int = int(args.LIMIT)
@@ -273,7 +273,6 @@ else:
                 "filter" : filterType}
 
     bskyJSON = getFeedDataJson(BASE_URL_USER_FEED, paramData, {})
-    bskyJSON = bskyJSON["feed"]
 
 
 for post in bskyJSON:
