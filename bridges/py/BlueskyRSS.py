@@ -141,7 +141,10 @@ def getItemFromPost(object:dict):
     repostText = ""
     if "reason" in object.keys():
         if object["reason"]["$type"] == "app.bsky.feed.defs#reasonRepost":
-            displayName = object["reason"]["by"]["displayName"]
+            if ("displayName" in object["reason"]["by"]):
+                displayName = object["reason"]["by"]["displayName"]
+            else:
+                displayName = object["reason"]["by"]["handle"]
             handle = object["reason"]["by"]["handle"]
             repostText = f"""
             <div style="display: inline-block; vertical-align: top;">
