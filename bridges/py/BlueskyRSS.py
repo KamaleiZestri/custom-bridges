@@ -9,6 +9,18 @@ import argparse
 import json
 import requests
 
+def getAuthor(post):
+    """" Returns BSKY author display name, or handle if user has no display name. """
+    author = post["author"]
+
+    if ("displayName" in author):
+        name = author["displayName"]
+    else:
+        name = author["handle"]
+
+    return name
+
+
 
 def genAvatarText(username, avatar, url):
     if args.NOAVA:
@@ -106,14 +118,9 @@ def getEmbedData(embed):
             text += getEmbedData(embed["record"])
 
         case "app.bsky.embed.record#viewRecord":
-            # record = embed["record"]
+            author = getAuthor(embed)
+
             embeds = []
-
-            if ("displayName" in embed["author"]):
-                author = embed["author"]["displayName"]
-            else:
-                author = embed["author"]["handle"]
-
             if "embed" in embed["value"]:
                 embeds += getEmbedData(embed["value"]["embed"]) 
             if "record" in embed["value"]:
@@ -133,17 +140,12 @@ def getEmbedData(embed):
             else:
                 avatarText = "<p>(NO AVATAR)</p>"
 
-            #TODO lol guess this text is actually optional???
-            optText = ""
-            # if "text" in embed:
-            optText = embed["value"]["text"]
-
             text += f"""
                 <div style="display: inline-block; vertical-align: top;">
                     {avatarText}
                 </div>
                 <div style="display: inline-block; vertical-align: top;">
-                    {optText}
+                    {embed["value"]["text"]}
                 </div>
                 <div style="display: block; vertical-align: top;">
                     {embedsText}
@@ -170,15 +172,19 @@ def getEmbedData(embed):
     return text
 
 def getItemFromPost(object:dict):
+    """
+        Parses each BSKY post object into a JSON feeds item.
+
+        Parameters
+        ----------
+        object : dict 
+           Container for the current parseable post. 
+    """
     post = object["post"]
 
     item:dict = {}
 
-    # some authors dont have display names
-    if ("displayName" in post["author"]):
-        item["authors"] = [{"name":post["author"]["displayName"]}]
-    else:
-        item["authors"] = [{"name":post["author"]["handle"]}]
+    item["authors"] = [{"name":getAuthor(post)}]
 
     item["id"] = post["cid"]
     item["date_published"] = post["record"]["createdAt"]
@@ -204,7 +210,12 @@ def getItemFromPost(object:dict):
     else:
         item["title"] = f"Post by {item["authors"][0]["name"]}"
 
-  
+    if "avatar" in post["author"]:
+        avatarText = genAvatarText(post["author"]["handle"], post["author"]["avatar"], item["title"])
+    else:
+        avatarText = "<p>(NO AVATAR)</p>"
+
+
     embeds = []
 
     if "embed" in post:
@@ -212,12 +223,6 @@ def getItemFromPost(object:dict):
     if "record" in post:
         embeds += getEmbedData(post["record"])
         
-       
-    if "avatar" in post["author"]:
-        avatarText = genAvatarText(post["author"]["handle"], post["author"]["avatar"], item["title"])
-    else:
-        avatarText = "<p>(NO AVATAR)</p>"
-
     embedsText = ""
     for embed in embeds:
         embedsText += embed
