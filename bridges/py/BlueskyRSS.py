@@ -41,7 +41,7 @@ def genImagesText(media):
             if isinstance(media, str):
                 imageURL = media.replace(" ", "%20")
             else:
-                #embed.gallery use "thumbnail" instead of "thumb" used by embed.imagees
+                #embed.gallery use "thumbnail" instead of "thumb" used by embed.images#view
                 if "thumbnail" in media:
                     imageURL = media["thumbnail"].replace(" ", "%20")
                 else:
@@ -103,7 +103,52 @@ def getEmbedData(embed):
     
         # TODO how to properly embed this...
         case "app.bsky.embed.record#view":
-            text = ""
+            text += getEmbedData(embed["record"])
+
+        case "app.bsky.embed.record#viewRecord":
+            # record = embed["record"]
+            embeds = []
+
+            if ("displayName" in embed["author"]):
+                author = embed["author"]["displayName"]
+            else:
+                author = embed["author"]["handle"]
+
+            if "embed" in embed["value"]:
+                embeds += getEmbedData(embed["value"]["embed"]) 
+            if "record" in embed["value"]:
+                embeds += getEmbedData(embed["value"]["record"])
+            if "embeds" in embed: 
+                for embedItem in embed["embeds"]:
+                    embeds += getEmbedData(embedItem)
+
+            embedsText = ""
+            for embedData in embeds:
+                embedsText += embedData
+
+            title = f"Embeded Post by {author}"
+
+            if "avatar" in embed["author"]:
+                avatarText = genAvatarText(embed["author"]["handle"], embed["author"]["avatar"], title)
+            else:
+                avatarText = "<p>(NO AVATAR)</p>"
+
+            #TODO lol guess this text is actually optional???
+            optText = ""
+            # if "text" in embed:
+            optText = embed["value"]["text"]
+
+            text += f"""
+                <div style="display: inline-block; vertical-align: top;">
+                    {avatarText}
+                </div>
+                <div style="display: inline-block; vertical-align: top;">
+                    {optText}
+                </div>
+                <div style="display: block; vertical-align: top;">
+                    {embedsText}
+                </div>
+                """
 
         case "app.bsky.embed.video#view":
             text += genVideoText(embed)
@@ -134,6 +179,7 @@ def getItemFromPost(object:dict):
         item["authors"] = [{"name":post["author"]["displayName"]}]
     else:
         item["authors"] = [{"name":post["author"]["handle"]}]
+
     item["id"] = post["cid"]
     item["date_published"] = post["record"]["createdAt"]
     item["url"] = f"https://bsky.app/profile/{post["author"]["handle"]}/post/{post["uri"].split("/")[-1]}"
